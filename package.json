@@ -1,0 +1,27 @@
+{
+  "name": "@tensor-oss/ledger-solana-sdk",
+  "version": "0.0.2",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/tensor-hq/ledger-solana-sdk",
+  "description": "NodeJS SDK to sign Solana txs with Ledger.",
+  "author": "richardwu",
+  "scripts": {
+    "build": "rm -rf ./dist && yarn tsc",
+    "publish_npm": "yarn build && npm publish --access public --registry https://registry.npmjs.org"
+  },
+  "dependencies": {
+    "@ledgerhq/hw-transport-node-hid": "^6.27.20",
+    "@solana/web3.js": "^1.78.4",
+    "bs58": "^5.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.1",
+    "typescript": "^5.1.6"
+  },
+  "packageManager": "yarn@3.3.1"
+}
