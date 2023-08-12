@@ -5,8 +5,8 @@ NodeJS SDK for signing Solana txs with Ledger.
 ## Installation
 
 ```sh
-npm i '@tensor-oss-ledger-solana-sdk'
-yarn add '@tensor-oss-ledger-solana-sdk'
+npm i '@tensor-oss/ledger-solana-sdk'
+yarn add '@tensor-oss/ledger-solana-sdk'
 ```
 
 ## Usage
