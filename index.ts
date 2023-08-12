@@ -6,7 +6,8 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
-export const Transport = require("@ledgerhq/hw-transport-node-hid").default;
+import Transport from "@ledgerhq/hw-transport-node-hid";
+export * as Transport from "@ledgerhq/hw-transport-node-hid";
 
 const INS_GET_APP_CONFIG = 0x04;
 const INS_GET_PUBKEY = 0x05;
@@ -19,10 +20,10 @@ const MAX_PAYLOAD = 255;
 const LEDGER_CLA = 0xe0;
 
 async function solanaSend(
-  transport: any,
-  instruction: any,
-  p1: any,
-  payload: any,
+  transport: Transport,
+  instruction: number,
+  p1: number,
+  payload: Buffer,
 ) {
   var p2 = 0;
   var payload_offset = 0;
@@ -67,7 +68,7 @@ function _harden(n: any) {
   return (n | BIP32_HARDENED_BIT) >>> 0;
 }
 
-function solanaDerivationPath(account?: any, change?: any) {
+export function solanaDerivationPath(account?: number, change?: number) {
   var length;
   if (typeof account === "number") {
     if (typeof change === "number") {
@@ -95,7 +96,7 @@ function solanaDerivationPath(account?: any, change?: any) {
   return derivation_path;
 }
 
-async function solanaLedgerGetAppConfig(transport: any) {
+async function solanaLedgerGetAppConfig(transport: Transport) {
   const reply = await transport.send(
     LEDGER_CLA,
     INS_GET_APP_CONFIG,
@@ -108,16 +109,16 @@ async function solanaLedgerGetAppConfig(transport: any) {
 }
 
 export async function solanaLedgerGetPubkey(
-  transport: any,
-  derivation_path: any,
+  transport: Transport,
+  derivation_path: Buffer,
 ) {
   return solanaSend(transport, INS_GET_PUBKEY, P1_NON_CONFIRM, derivation_path);
 }
 
 async function solanaLedgerSignTransaction(
-  transport: any,
-  derivation_path: any,
-  transaction: any,
+  transport: Transport,
+  derivation_path: Buffer,
+  transaction: Transaction,
 ) {
   const msg_bytes = transaction.compileMessage().serialize();
 
@@ -130,14 +131,24 @@ async function solanaLedgerSignTransaction(
   return solanaSend(transport, INS_SIGN_MESSAGE, P1_CONFIRM, payload);
 }
 
-export const ledgerSignSolTx = async (tx: Transaction, signer: PublicKey) => {
+export const solanaLedgerSignTx = async ({
+  tx,
+  signer,
+  account,
+  change,
+}: {
+  tx: Transaction;
+  signer: PublicKey;
+  account?: number;
+  change?: number;
+}) => {
   console.log("🚀 Begin signing with ledger...");
-  const transport = await Transport.open();
+  const transport = await Transport.open(undefined);
 
   const app_config = await solanaLedgerGetAppConfig(transport);
   console.log("App config:", app_config);
 
-  const from_derivation_path = solanaDerivationPath();
+  const from_derivation_path = solanaDerivationPath(account, change);
   let sig_bytes = await solanaLedgerSignTransaction(
     transport,
     from_derivation_path,
@@ -151,7 +162,7 @@ export const ledgerSignSolTx = async (tx: Transaction, signer: PublicKey) => {
   console.log("✅ Sig verifies:", tx.verifySignatures());
 };
 
-export const sendAndConfirmTxLedger = async ({
+export const solanaLedgerSendAndConfirmTx = async ({
   conn,
   tx,
   ledgerSigner,
@@ -167,7 +178,7 @@ export const sendAndConfirmTxLedger = async ({
   delayMs?: number;
   ledgerSigner: PublicKey;
 }) => {
-  await ledgerSignSolTx(tx, ledgerSigner);
+  await solanaLedgerSignTx({ tx, signer: ledgerSigner });
   try {
     // for LEDGER have to use this method or get sig verification error
     const sig = await conn.sendRawTransaction(tx.serialize());
